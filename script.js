@@ -34,6 +34,7 @@ addTaskBtn.addEventListener("click", () => {
 
 function addTask(text, done) {
   const li = document.createElement("li");
+  li.draggable = true;
   // Task text span
   const taskSpan = document.createElement("span");
   taskSpan.className = "tasks";
@@ -65,7 +66,50 @@ function addTask(text, done) {
   li.appendChild(taskSpan);
   li.appendChild(actions);
   taskList.appendChild(li);
+
+  // Drag and drop events
+  li.addEventListener("dragstart", (e) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", Array.from(taskList.children).indexOf(li));
+    li.classList.add("dragging");
+  });
+  li.addEventListener("dragend", () => {
+    li.classList.remove("dragging");
+  });
+  li.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    li.classList.add("drag-over");
+  });
+  li.addEventListener("dragleave", () => {
+    li.classList.remove("drag-over");
+  });
+  li.addEventListener("drop", (e) => {
+    e.preventDefault();
+    li.classList.remove("drag-over");
+    const fromIndex = parseInt(e.dataTransfer.getData("text/plain"));
+    const toIndex = Array.from(taskList.children).indexOf(li);
+    if (fromIndex !== toIndex) {
+      const moving = taskList.children[fromIndex];
+      if (toIndex > fromIndex) {
+        taskList.insertBefore(moving, li.nextSibling);
+      } else {
+        taskList.insertBefore(moving, li);
+      }
+      saveTasks();
+    }
+  });
 }
+// Optional: Add drag-over style
+const style = document.createElement('style');
+style.textContent = `
+.drag-over {
+  outline: 3px dashed black !important;
+}
+.dragging {
+  opacity: 0.5;
+}
+`;
+document.head.appendChild(style);
 
 // Save tasks to localStorage
 function saveTasks() {
